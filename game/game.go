@@ -23,7 +23,7 @@ var (
 
 func init() {
 	gophers = make(map[string]*ebiten.Image)
-	imagesNames := []string{"left", "left-up", "up", "right-up", "right", "right-down", "down", "left-down"}
+	imagesNames := []string{"left", "left-up", "up", "right-up", "right", "right-down", "down", "left-down", "happy-left", "happy-left-up", "happy-up", "happy-right-up", "happy-right", "happy-right-down", "happy-down", "happy-left-down"}
 	for _, name := range imagesNames {
 		img, _, err := ebitenutil.NewImageFromFile(path.Join("resources", "images", name+".png"))
 		if err != nil {
@@ -45,6 +45,7 @@ func init() {
 type Game struct {
 	image          *ebiten.Image
 	pointer        *ebiten.Image
+	rubCount       int
 	mouseX, mouseY int
 }
 
@@ -62,26 +63,59 @@ func newGame() (*Game, error) {
 
 func (g *Game) Update() error {
 	mouseX, mouseY := ebiten.CursorPosition()
+
+	// 視線を変える
 	arg := math.Atan2(float64(mouseY-eyePos.Y), float64(mouseX-eyePos.X))
-	if arg < -math.Pi*7/8 {
-		g.image = images["left"]
-	} else if arg < -math.Pi*5/8 {
-		g.image = images["left-up"]
-	} else if arg < -math.Pi*3/8 {
-		g.image = images["up"]
-	} else if arg < -math.Pi/8 {
-		g.image = images["right-up"]
-	} else if arg < math.Pi/8 {
-		g.image = images["right"]
-	} else if arg < math.Pi*3/8 {
-		g.image = images["right-down"]
-	} else if arg < math.Pi*5/8 {
-		g.image = images["down"]
-	} else if arg < math.Pi*7/8 {
-		g.image = images["left-down"]
+	if g.rubCount < 30 {
+		if arg < -math.Pi*7/8 {
+			g.image = images["left"]
+		} else if arg < -math.Pi*5/8 {
+			g.image = images["left-up"]
+		} else if arg < -math.Pi*3/8 {
+			g.image = images["up"]
+		} else if arg < -math.Pi/8 {
+			g.image = images["right-up"]
+		} else if arg < math.Pi/8 {
+			g.image = images["right"]
+		} else if arg < math.Pi*3/8 {
+			g.image = images["right-down"]
+		} else if arg < math.Pi*5/8 {
+			g.image = images["down"]
+		} else if arg < math.Pi*7/8 {
+			g.image = images["left-down"]
+		} else {
+			g.image = images["left"]
+		}
 	} else {
-		g.image = images["left"]
+		if arg < -math.Pi*7/8 {
+			g.image = images["happy-left"]
+		} else if arg < -math.Pi*5/8 {
+			g.image = images["happy-left-up"]
+		} else if arg < -math.Pi*3/8 {
+			g.image = images["happy-up"]
+		} else if arg < -math.Pi/8 {
+			g.image = images["happy-right-up"]
+		} else if arg < math.Pi/8 {
+			g.image = images["happy-right"]
+		} else if arg < math.Pi*3/8 {
+			g.image = images["happy-right-down"]
+		} else if arg < math.Pi*5/8 {
+			g.image = images["happy-down"]
+		} else if arg < math.Pi*7/8 {
+			g.image = images["happy-left-down"]
+		} else {
+			g.image = images["happy-left"]
+		}
 	}
+
+	// gopherを撫でると、撫でた距離に応じてrubCountが増える
+
+	if mouseX >= 175 && mouseX <= 315 && mouseY >= 120 && mouseY <= 350 {
+		g.rubCount += int(math.Abs(float64(mouseX-g.mouseX))+math.Abs(float64(mouseY-g.mouseY))) / 10
+	} else {
+		g.rubCount -= 1
+	}
+
 	g.mouseX, g.mouseY = mouseX, mouseY
 	return nil
 }
