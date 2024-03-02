@@ -98,7 +98,7 @@ func (g *Game) Update() error {
 		} else {
 			g.image = images["left"]
 		}
-	} else if g.gopherMode == GopherModeHappy {
+	} else if g.gopherMode == GopherModeHappy || g.gopherMode == GopherModeLovely {
 		if arg < -math.Pi*7/8 {
 			g.image = images["happy-left"]
 		} else if arg < -math.Pi*5/8 {
