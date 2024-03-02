@@ -10,15 +10,24 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+type GopherMode int
+
+const (
+	GopherModeNormal GopherMode = iota
+	GopherModeHappy
+	GopherModeLovely
+)
+
 const (
 	ScreenWidth  = 480
 	ScreenHeight = 480
 )
 
 var (
-	gophers map[string]*ebiten.Image
-	images  map[string]*ebiten.Image
-	eyePos  = image.Pt(ScreenWidth/2+10, ScreenHeight/2-65)
+	gophers  map[string]*ebiten.Image
+	images   map[string]*ebiten.Image
+	eyePos   = image.Pt(ScreenWidth/2+10, ScreenHeight/2-65)
+	heartPos = image.Pt(ScreenWidth*2/3, ScreenHeight/3-30)
 )
 
 func init() {
@@ -46,6 +55,8 @@ type Game struct {
 	image          *ebiten.Image
 	pointer        *ebiten.Image
 	rubCount       int
+	gopherMode     GopherMode
+	heart          *Heart
 	mouseX, mouseY int
 }
 
@@ -55,8 +66,9 @@ func newGame() (*Game, error) {
 		return nil, err
 	}
 	g := &Game{
-		image:   images["left"],
-		pointer: pointer,
+		image:      images["left"],
+		pointer:    pointer,
+		gopherMode: GopherModeNormal,
 	}
 	return g, nil
 }
@@ -66,7 +78,7 @@ func (g *Game) Update() error {
 
 	// 視線を変える
 	arg := math.Atan2(float64(mouseY-eyePos.Y), float64(mouseX-eyePos.X))
-	if g.rubCount < 30 {
+	if g.gopherMode == GopherModeNormal {
 		if arg < -math.Pi*7/8 {
 			g.image = images["left"]
 		} else if arg < -math.Pi*5/8 {
@@ -86,7 +98,7 @@ func (g *Game) Update() error {
 		} else {
 			g.image = images["left"]
 		}
-	} else {
+	} else if g.gopherMode == GopherModeHappy {
 		if arg < -math.Pi*7/8 {
 			g.image = images["happy-left"]
 		} else if arg < -math.Pi*5/8 {
@@ -108,6 +120,16 @@ func (g *Game) Update() error {
 		}
 	}
 
+	if g.gopherMode == GopherModeLovely {
+		if g.heart == nil || g.heart.limit <= 0 {
+			g.heart = newHeart(float64(heartPos.X), float64(heartPos.Y))
+		}
+	}
+
+	if g.heart != nil {
+		g.heart.Update()
+	}
+
 	// gopherを撫でると、撫でた距離に応じてrubCountが増える
 
 	if mouseX >= 175 && mouseX <= 315 && mouseY >= 120 && mouseY <= 350 {
@@ -118,6 +140,16 @@ func (g *Game) Update() error {
 
 	if g.rubCount < 0 {
 		g.rubCount = 0
+	} else if g.rubCount > 100 {
+		g.rubCount = 100
+	}
+
+	if g.rubCount == 100 {
+		g.gopherMode = GopherModeLovely
+	} else if g.rubCount > 30 {
+		g.gopherMode = GopherModeHappy
+	} else {
+		g.gopherMode = GopherModeNormal
 	}
 
 	g.mouseX, g.mouseY = mouseX, mouseY
@@ -129,6 +161,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	opt := &ebiten.DrawImageOptions{}
 	opt.GeoM.Translate(float64(g.mouseX-g.pointer.Bounds().Dx()/2), float64(g.mouseY-g.pointer.Bounds().Dy()/2))
 	screen.DrawImage(g.pointer, opt)
+	if g.heart != nil {
+		g.heart.Draw(screen)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
