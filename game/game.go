@@ -42,12 +42,19 @@ func init() {
 }
 
 type Game struct {
-	image *ebiten.Image
+	image          *ebiten.Image
+	pointer        *ebiten.Image
+	mouseX, mouseY int
 }
 
 func newGame() (*Game, error) {
+	pointer, _, err := ebitenutil.NewImageFromFile(path.Join("resources", "images", "ポインタ.png"))
+	if err != nil {
+		return nil, err
+	}
 	g := &Game{
-		image: images["left"],
+		image:   images["left"],
+		pointer: pointer,
 	}
 	return g, nil
 }
@@ -77,11 +84,15 @@ func (g *Game) Update() error {
 			g.image = images["down"]
 		}
 	}
+	g.mouseX, g.mouseY = mouseX, mouseY
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.image, nil)
+	opt := &ebiten.DrawImageOptions{}
+	opt.GeoM.Translate(float64(g.mouseX-g.pointer.Bounds().Dx()/2), float64(g.mouseY-g.pointer.Bounds().Dy()/2))
+	screen.DrawImage(g.pointer, opt)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -95,6 +106,7 @@ func RunGame() {
 	}
 	ebiten.SetWindowSize(ScreenWidth, ScreenHeight)
 	ebiten.SetWindowTitle("Go Refresh")
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
