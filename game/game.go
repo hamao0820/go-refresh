@@ -116,6 +116,10 @@ func (g *Game) Update() error {
 		g.rubCount -= 1
 	}
 
+	if g.rubCount < 0 {
+		g.rubCount = 0
+	}
+
 	g.mouseX, g.mouseY = mouseX, mouseY
 	return nil
 }
