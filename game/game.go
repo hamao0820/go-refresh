@@ -3,6 +3,7 @@ package game
 import (
 	"image"
 	"log"
+	"math"
 	"path"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -61,28 +62,25 @@ func newGame() (*Game, error) {
 
 func (g *Game) Update() error {
 	mouseX, mouseY := ebiten.CursorPosition()
-	if mouseX < eyePos.X {
-		if mouseY < eyePos.Y {
-			g.image = images["left-up"]
-		} else if mouseY > eyePos.Y {
-			g.image = images["left-down"]
-		} else {
-			g.image = images["left"]
-		}
-	} else if mouseX > eyePos.X {
-		if mouseY < eyePos.Y {
-			g.image = images["right-up"]
-		} else if mouseY > eyePos.Y {
-			g.image = images["right-down"]
-		} else {
-			g.image = images["right"]
-		}
+	arg := math.Atan2(float64(mouseY-eyePos.Y), float64(mouseX-eyePos.X))
+	if arg < -math.Pi*7/8 {
+		g.image = images["left"]
+	} else if arg < -math.Pi*5/8 {
+		g.image = images["left-up"]
+	} else if arg < -math.Pi*3/8 {
+		g.image = images["up"]
+	} else if arg < -math.Pi/8 {
+		g.image = images["right-up"]
+	} else if arg < math.Pi/8 {
+		g.image = images["right"]
+	} else if arg < math.Pi*3/8 {
+		g.image = images["right-down"]
+	} else if arg < math.Pi*5/8 {
+		g.image = images["down"]
+	} else if arg < math.Pi*7/8 {
+		g.image = images["left-down"]
 	} else {
-		if mouseY < eyePos.Y {
-			g.image = images["up"]
-		} else if mouseY > eyePos.Y {
-			g.image = images["down"]
-		}
+		g.image = images["left"]
 	}
 	g.mouseX, g.mouseY = mouseX, mouseY
 	return nil
