@@ -1,6 +1,7 @@
 package game
 
 import (
+	"image"
 	"log"
 	"path"
 
@@ -16,6 +17,7 @@ const (
 var (
 	gophers map[string]*ebiten.Image
 	images  map[string]*ebiten.Image
+	eyePos  = image.Pt(ScreenWidth/2+10, ScreenHeight/2-65)
 )
 
 func init() {
@@ -51,6 +53,30 @@ func newGame() (*Game, error) {
 }
 
 func (g *Game) Update() error {
+	mouseX, mouseY := ebiten.CursorPosition()
+	if mouseX < eyePos.X {
+		if mouseY < eyePos.Y {
+			g.image = images["left-up"]
+		} else if mouseY > eyePos.Y {
+			g.image = images["left-down"]
+		} else {
+			g.image = images["left"]
+		}
+	} else if mouseX > eyePos.X {
+		if mouseY < eyePos.Y {
+			g.image = images["right-up"]
+		} else if mouseY > eyePos.Y {
+			g.image = images["right-down"]
+		} else {
+			g.image = images["right"]
+		}
+	} else {
+		if mouseY < eyePos.Y {
+			g.image = images["up"]
+		} else if mouseY > eyePos.Y {
+			g.image = images["down"]
+		}
+	}
 	return nil
 }
 
